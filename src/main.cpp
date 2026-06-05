@@ -3,83 +3,81 @@
 #include <vector>
 #include <ctype.h>
 
-#include "tabuleiro.h"
-#include "impressaoTerminal.hpp"
+#include "board.h"
+#include "terminalPrint.hpp"
 
-// bibliotecas Zabot
-#include "aborta.hpp"
+// Zabot libraries
+#include "abort.hpp"
 #include "dataFileReader.hpp"
 
 using namespace std;
 
-enum{jogo_via_arquivo, via_terminal};
-void carrega_dados( vector<string> &jogadas_times, char *argv[] );
-void decodifica_main(Tabuleiro &t, string jogadas_times, int posicao);
-int switch_para_letra(char letra);
-int switch_para_numero(char numero);
-std::string switch_char_string(char letra);
+enum{playFromFile, viaTerminal};
+void loadData( vector<string> &teamMoves, char *argv[] );
+void decodeMain(Board &t, string teamMoves, int position);
+int letterToCol(char letter);
+int numberToRow(char number);
+std::string pieceCharToString(char letter);
 
 
 int main( int argc, char *argv[] )
 {
-	// Parâmetros de entrada
-	bool tipo_leitura = via_terminal; //entrada manual ou por arquivo//entrada manual ou por arquivo
-	//static const bool printar_caracteres_especiais = true;
+	// Input parameters
+	bool readType = viaTerminal; // manual input or from file
 
 
-	Tabuleiro t;
+	Board t;
 
-	if(tipo_leitura == jogo_via_arquivo)
+	if(readType == playFromFile)
 	{
-		if( argc!=2 ) aborta( "Numero de parametros de entrada errado!" );
-		std::vector<string> jogadas_times;
-		carrega_dados(jogadas_times, argv);
+		if( argc!=2 ) abort_program( "Wrong number of input parameters!" );
+		std::vector<string> teamMoves;
+		loadData(teamMoves, argv);
 
-		int tamanho = jogadas_times.size();
+		int size = int(teamMoves.size());
 
-		for(int i=0; i < tamanho; i++)
+		for(int i=0; i < size; i++)
 		{
-			impressao(t);
-			decodifica_main(t, jogadas_times[std::size_t(i)],  i);
+			printBoard(t);
+			decodeMain(t, teamMoves[std::size_t(i)],  i);
 		}
-		impressao(t);
+		printBoard(t);
 	}
 
 	else
 	{
-		int cont = 0;
+		int count = 0;
 		for(;;)
 		{
-			impressao(t);
-			if( cont%2 == 0 ) std::cout << "Entrada Time Branco: ";
-			else std::cout << "Entrada Time Preto: ";
-			std::string jogada;
-			std::cin >> jogada;
-			if(jogada == "fim") break;
+			printBoard(t);
+			if( count%2 == 0 ) std::cout << "White Team Move: ";
+			else std::cout << "Black Team Move: ";
+			std::string moveStr;
+			std::cin >> moveStr;
+			if(moveStr == "end") break;
 
-			decodifica_main(t, jogada, cont);
-			cont++;
+			decodeMain(t, moveStr, count);
+			count++;
 		}
 	}
 	return 0;
 }
 
 
-void carrega_dados( vector<string> &jogadas_times, char *argv[] )
+void loadData( vector<string> &teamMoves, char *argv[] )
 {
 	DataFileReader dfr(argv[1]);
-	// Lê os dados
-	int jogada;
-	string time_branco, time_preto;
+	// Reads data
+	int moveNum;
+	string whiteMove, blackMove;
 
 	for(;;)
 	{
 		++dfr;
-		dfr >> jogada >> time_branco >> time_preto;
-		if( time_branco == "fim" || time_preto == "fim" ) break;
-		//cout << jogada << " " << time_branco << " " << time_preto << endl;
-		jogadas_times.push_back(time_branco);
-		jogadas_times.push_back(time_preto);
+		dfr >> moveNum >> whiteMove >> blackMove;
+		if( whiteMove == "end" || blackMove == "end" ) break;
+		teamMoves.push_back(whiteMove);
+		teamMoves.push_back(blackMove);
 	}
 
 	return;
@@ -87,87 +85,87 @@ void carrega_dados( vector<string> &jogadas_times, char *argv[] )
 
 
 
-void decodifica_main(Tabuleiro &t, string jogadas_times, int posicao)
+void decodeMain(Board &t, string teamMoves, int position)
 {
-	char cor_time;
-	if(posicao%2 == 0) cor_time = 'B';
-	else cor_time = 'P';
+	char teamColor;
+	if(position%2 == 0) teamColor = 'W';
+	else teamColor = 'B';
 
-	string jogada_atual = jogadas_times;
+	string currentMove = teamMoves;
 
-	//caso letras sejam miusculas significa que sera apenas peao
-	if(islower(jogada_atual[0]) != 0)
+	// if letters are lowercase it means it is just a pawn
+	if(islower(currentMove[0]) != 0)
 	{
-		if(jogada_atual.size() == 2) //apenas movimentacao
+		if(currentMove.size() == 2) // just movement
 		{
-			string peca = std::string("P") + char('1' + switch_para_letra(jogada_atual[0])) + cor_time;
-			int linha = switch_para_numero(jogada_atual[1]);
-			int coluna = switch_para_letra(jogada_atual[0]);
-			cout << peca << " " << linha << " " << coluna << endl;
+			string piece = std::string("P") + char('1' + letterToCol(currentMove[0])) + teamColor;
+			int row = numberToRow(currentMove[1]);
+			int col = letterToCol(currentMove[0]);
+			cout << piece << " " << row << " " << col << endl;
 
-			if(!t.jogada(peca, linha, coluna, jogada_atual))
+			if(!t.move(piece, row, col, currentMove))
 			{
-				std::cout << "Jogada Invalida" << std::endl;
+				std::cout << "Invalid Move" << std::endl;
 			}
 		}
 
-		else if(jogada_atual.size() == 4) //movimentacao seguida de comida de peca
+		else if(currentMove.size() == 4) // movement followed by capture
 		{
-			string peca = std::string("P") + char('1' + switch_para_letra(jogada_atual[0])) + cor_time;
-			int linha = switch_para_numero(jogada_atual[3]);
-			int coluna = switch_para_letra(jogada_atual[2]);
-			cout << peca << " " << linha << " " << coluna << endl;
+			string piece = std::string("P") + char('1' + letterToCol(currentMove[0])) + teamColor;
+			int row = numberToRow(currentMove[3]);
+			int col = letterToCol(currentMove[2]);
+			cout << piece << " " << row << " " << col << endl;
 
-			if(!t.jogada(peca, linha, coluna, jogada_atual))
+			if(!t.move(piece, row, col, currentMove))
 			{
-				std::cout << "Jogada Invalida" << std::endl;
+				std::cout << "Invalid Move" << std::endl;
 			}
 		}
 	}
 
-	//caso seja minuscula sera as pecas restantes
-	else if(isupper(jogada_atual[0]) != 0)
+	// if uppercase it will be the remaining pieces
+	else if(isupper(currentMove[0]) != 0)
 	{
-		if(jogada_atual.size() == 3) //apenas movimentacao para cavalos
+		if(currentMove.size() == 3) // just movement
 		{
-			string peca = switch_char_string(jogada_atual[0]) + std::string("1") + cor_time;
-			if(jogada_atual[0] == 'R' || jogada_atual[0] == 'D' ) peca = switch_char_string(jogada_atual[0]) + cor_time;
-			int linha = switch_para_numero(jogada_atual[2]);
-			int coluna = switch_para_letra(jogada_atual[1]);
+			string piece = pieceCharToString(currentMove[0]) + std::string("1") + teamColor;
+			if(currentMove[0] == 'K' || currentMove[0] == 'Q' ) piece = pieceCharToString(currentMove[0]) + teamColor;
+			int row = numberToRow(currentMove[2]);
+			int col = letterToCol(currentMove[1]);
 
-			if(!t.jogada(peca, linha, coluna, jogada_atual))
+			if(!t.move(piece, row, col, currentMove))
 			{
-				peca = switch_char_string(jogada_atual[0]) + std::string("2") + cor_time;
-				if(jogada_atual[0] == 'R' || jogada_atual[0] == 'D' ) peca = switch_char_string(jogada_atual[0]) + cor_time;
-				if(!t.jogada(peca, linha, coluna, jogada_atual))
+				piece = pieceCharToString(currentMove[0]) + std::string("2") + teamColor;
+				if(currentMove[0] == 'K' || currentMove[0] == 'Q' ) piece = pieceCharToString(currentMove[0]) + teamColor;
+				if(!t.move(piece, row, col, currentMove))
 				{
-					std::cout << "Jogada Invalida" << std::endl;
+					std::cout << "Invalid Move" << std::endl;
 				}
-				cout << peca << " " << linha << " " << coluna << endl;
+				cout << piece << " " << row << " " << col << endl;
 				return;
 			}
-			cout << peca << " " << linha << " " << coluna << endl;
+			cout << piece << " " << row << " " << col << endl;
 		}
 
-		if(jogada_atual.size() == 4) //apenas movimentacao para cavalos
+		if(currentMove.size() == 4) // movement with capture
 		{
-			string peca = switch_char_string(jogada_atual[0]) + std::string("1") + cor_time;
-			if(jogada_atual[0] == 'R' || jogada_atual[0] == 'D' ) peca = switch_char_string(jogada_atual[0]) + cor_time;
-			int linha = switch_para_numero(jogada_atual[3]);
-			int coluna = switch_para_letra(jogada_atual[2]);
+			string piece = pieceCharToString(currentMove[0]) + std::string("1") + teamColor;
+			if(currentMove[0] == 'K' || currentMove[0] == 'Q' ) piece = pieceCharToString(currentMove[0]) + teamColor;
+			int row = numberToRow(currentMove[3]);
+			int col = letterToCol(currentMove[2]);
 
-			if(!t.jogada(peca, linha, coluna, jogada_atual))
+			if(!t.move(piece, row, col, currentMove))
 			{
-				peca = switch_char_string(jogada_atual[0]) + std::string("2") + cor_time;
-				if(jogada_atual[0] == 'R' || jogada_atual[0] == 'D' ) peca = switch_char_string(jogada_atual[0]) + cor_time;
-				if(!t.jogada(peca, linha, coluna, jogada_atual))
+				piece = pieceCharToString(currentMove[0]) + std::string("2") + teamColor;
+				if(currentMove[0] == 'K' || currentMove[0] == 'Q' ) piece = pieceCharToString(currentMove[0]) + teamColor;
+				if(!t.move(piece, row, col, currentMove))
 				{
-					std::cout << "Jogada Invalida" << std::endl;
+					std::cout << "Invalid Move" << std::endl;
 				}
-				cout << peca << " " << linha << " " << coluna << endl;
+				cout << piece << " " << row << " " << col << endl;
 				return;
 			}
-			cout << peca << " " << linha << " " << coluna << endl;
+			cout << piece << " " << row << " " << col << endl;
 		}
 	}
 
@@ -176,9 +174,9 @@ void decodifica_main(Tabuleiro &t, string jogadas_times, int posicao)
 
 
 
-int switch_para_letra(char letra)
+int letterToCol(char letter)
 {
-	switch(letra)
+	switch(letter)
 	{
 		case 'a':
 			return 0;
@@ -202,9 +200,9 @@ int switch_para_letra(char letra)
 	return -1;
 }
 
-int switch_para_numero(char numero)
+int numberToRow(char number)
 {
-	switch(numero)
+	switch(number)
 	{
 		case '1':
 			return 7;
@@ -228,22 +226,22 @@ int switch_para_numero(char numero)
 	return -1;
 }
 
-std::string switch_char_string(char letra)
+std::string pieceCharToString(char letter)
 {
-	switch(letra)
+	switch(letter)
 	{
-		case 'C':
-			return std::string("C");
-		case 'T':
-			return std::string("T");
-		case 'B':
-			return std::string("B");
-		case 'D':
-			return std::string("D");
+		case 'N':
+			return std::string("N");
 		case 'R':
 			return std::string("R");
-		default: return std::string ("erro");
+		case 'B':
+			return std::string("B");
+		case 'Q':
+			return std::string("Q");
+		case 'K':
+			return std::string("K");
+		default: return std::string ("error");
 	}
 
-	return std::string("erro");;
+	return std::string("error");
 }

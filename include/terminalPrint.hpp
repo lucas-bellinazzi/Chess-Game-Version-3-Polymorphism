@@ -1,12 +1,12 @@
-#ifndef IMPRESSAO_TERMINAL
-#define IMPRESSAO_TERMINAL
+#ifndef TERMINAL_PRINT
+#define TERMINAL_PRINT
 
 #include <iostream>
 #include <string.h>
-#include "tabuleiro.h"
+#include "board.h"
 
-void impressao(const Tabuleiro &t);
-void impressao(const Tabuleiro &t)
+void printBoard(const Board &t);
+void printBoard(const Board &t)
 {
 
 	std::cout << "   a  b  c  d  e  f  g  h  " << std::endl;
@@ -18,9 +18,9 @@ void impressao(const Tabuleiro &t)
 
 		for(int j = 0; j < 8 ; j++) {
 
-			Peca *peca = t.getMatriz(i, j);
+			Piece *peca = t.getPieceAt(i, j);
 
-			if(peca) std::cout << ' ' << peca->retornaString() << ' ';
+			if(peca) std::cout << ' ' << peca->toString() << ' ';
 			else std::cout << " - ";
 		}
 

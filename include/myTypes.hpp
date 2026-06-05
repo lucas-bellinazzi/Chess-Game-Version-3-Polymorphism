@@ -1,20 +1,20 @@
 //=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|
 //
-//   Fornece abreviacoes uteis para os tipos mais usados
-//   A regra de nomenclatura eh bem clara!
+//   Provides useful abbreviations for the most commonly used types
+//   The naming convention is very clear!
 //
-// PARA O EMACS:
-//   Nao esqueca de alterar o arquivo emacs-lisp/font-lock.el para 
-// incluir novos tipos. (Para achar o lugar, busque por MTci )
-//   Para verificar se esta funcionando, basta fechar e reabrir o emacs com este
-// arquivo. Se os novos tipos tiverem a mesma cor dos antigos, eh porque esta
-// funcionando.
+// FOR EMACS:
+//   Do not forget to modify the file emacs-lisp/font-lock.el to
+// include new types. (To find the place, search for MTci)
+//   To verify if it is working, simply close and reopen emacs with this
+// file. If the new types have the same color as the old ones, it means
+// it is working.
 //________________________________________________________
-//A.Z. - 07/05 => Criacao
-//       12/05 => O comentario sobre o emacs.
+//A.Z. - 07/05 => Creation
+//       12/05 => Comment about emacs.
 //=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|
-#ifndef MEUSTIPOS_HPP
-#define MEUSTIPOS_HPP
+#ifndef MYTYPES_HPP
+#define MYTYPES_HPP
 
 #include <vector>
 #include <string>
@@ -47,4 +47,4 @@ typedef std::vector<float>::iterator          MTvfi;
 typedef std::vector<double>::iterator         MTvdi;
 typedef std::vector<std::string>::iterator    MTvsi;
 
-#endif /* MEUSTIPOS_HPP */
+#endif /* MYTYPES_HPP */
